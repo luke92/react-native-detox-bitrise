@@ -1,0 +1,121 @@
+---
+format_version: '13'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: react-native
+workflows:
+  primary:
+    description: |
+      Runs tests.
+
+      Next steps:
+      - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
+    steps:
+    - activate-ssh-key@4: {}
+    - git-clone@8: {}
+    - restore-npm-cache@1: {}
+    - npm@1:
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    - script@1:
+        title: Install Detox Pre-Requisites
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            brew tap wix/brew
+
+            brew install applesimutils
+    - script@1:
+        title: Install Detox CLI
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            npm install -g detox-cli
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            cd ios; pod install; cd -;
+        title: CocoPod Install
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            detox build -c ios.sim.debug
+        title: Detox Build iOS
+    - script@1:
+        title: Detox E2E iOS Test
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            detox test --configuration ios.sim.debug --record-videos all --take-screenshots all
+    - script@1:
+        is_always_run: true
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            cp -R artifacts $BITRISE_DEPLOY_DIR
+        title: Publish Test Artifacts
+    - deploy-to-bitrise-io@2: {}
+meta:
+  bitrise.io:
+    stack: osx-xcode-15.4.x
+    machine_type_id: g2-m1.4core
+app:
+  envs:
+  - opts:
+      is_expand: false
+    WORKDIR: "."
+  - opts:
+      is_expand: false
+    PROJECT_LOCATION: android
+  - opts:
+      is_expand: false
+    MODULE: app
+  - opts:
+      is_expand: false
+    VARIANT: Debug
+  - opts:
+      is_expand: false
+    BITRISE_PROJECT_PATH: ios/BitriseReactNative.xcworkspace
+  - opts:
+      is_expand: false
+    BITRISE_SCHEME: BitriseReactNative
+  - opts:
+      is_expand: false
+    BITRISE_DISTRIBUTION_METHOD: development
+trigger_map:
+- push_branch: main
+  workflow: primary
+- pull_request_source_branch: "*"
+  workflow: primary
