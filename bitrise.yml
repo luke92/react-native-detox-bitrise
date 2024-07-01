@@ -17,6 +17,10 @@ workflows:
         inputs:
         - workdir: "$WORKDIR"
         - command: install
+    - yarn@0:
+        inputs:
+        - cache_local_deps: 'yes'
+        - command: install
     - script@1:
         title: Install Detox Pre-Requisites
         inputs:
@@ -61,7 +65,7 @@ workflows:
             # debug log
             set -x
 
-            detox build -c ios.sim.debug
+            detox build -c ios.sim.release
         title: Detox Build iOS
     - script@1:
         title: Detox E2E iOS Test
@@ -73,7 +77,7 @@ workflows:
             # debug log
             set -x
 
-            detox test --configuration ios.sim.debug --record-videos all --take-screenshots all
+            detox test --configuration ios.sim.release --cleanup --record-videos all --take-screenshots all
     - script@1:
         is_always_run: true
         inputs:
