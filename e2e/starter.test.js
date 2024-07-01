@@ -7,9 +7,11 @@ describe('Example', () => {
     });
   });
 
+  /*
   beforeEach(async () => {
     await device.reloadReactNative();
   });
+  */
 
   it('should have Step one', async () => {
     await expect(element(by.text('Step One'))).toBeVisible();
