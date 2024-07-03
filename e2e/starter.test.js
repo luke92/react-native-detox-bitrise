@@ -1,3 +1,5 @@
+import {device, element, by} from 'detox';
+
 describe('Example', () => {
   beforeAll(async () => {
     await device.launchApp({
@@ -17,5 +19,9 @@ describe('Example', () => {
 
   it('should have See Your Changes', async () => {
     await expect(element(by.text('See Your Changes'))).toBeVisible();
+  });
+
+  it('should enter the password', async () => {
+    await element(by.id('password')).typeText('Example123!');
   });
 });
