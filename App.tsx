@@ -25,6 +25,7 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import PasswordInput from './components/PasswordInput/PasswordInput';
+import NumericInput from './components/NumericInput/NumericInput';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -77,6 +78,7 @@ function App(): React.JSX.Element {
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
+          <NumericInput />
           <PasswordInput />
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this

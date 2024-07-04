@@ -1,4 +1,4 @@
-import {device, element, by} from 'detox';
+import {device, element, by, waitFor} from 'detox';
 
 describe('Example', () => {
   beforeAll(async () => {
@@ -21,7 +21,29 @@ describe('Example', () => {
     await expect(element(by.text('See Your Changes'))).toBeVisible();
   });
 
-  it('should enter the password', async () => {
-    await element(by.id('password')).typeText('Example123!');
+  it('should enter the number and visualize another texts', async () => {
+    const input = element(by.id('numeric-input'));
+    await input.tap();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await input.typeText('123456');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await input.typeText('\n');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitFor(element(by.text('Debug')))
+      .toBeVisible()
+      .withTimeout(10000);
+  });
+
+  it('should enter the password and visualize another texts', async () => {
+    const input = element(by.id('password'));
+    await input.tap();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await input.typeText('Example123!');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await input.typeText('\n');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitFor(element(by.text('Debug')))
+      .toBeVisible()
+      .withTimeout(10000);
   });
 });

@@ -77,3 +77,14 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+# Software Keyboard
+- If you need hide the software keyboard apply this config: 
+```
+defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool true
+```
+- If you need run the tests with the software keyboard apply this config:
+```
+defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
+```
+- If software keyboard is present and you need close the keyboard without `tap` on `return` or `enter` just add a `\n` at the end of the text that you entered

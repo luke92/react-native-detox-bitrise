@@ -22,6 +22,9 @@ const PasswordInput = () => {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   label: {
     marginBottom: 8,
@@ -32,6 +35,7 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
     borderWidth: 1,
     paddingLeft: 8,
+    width: '80%',
   },
 });
 
