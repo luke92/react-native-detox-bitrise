@@ -1,5 +1,19 @@
 import {device, element, by, waitFor} from 'detox';
 
+const closeSoftwareKeyboard = async elementSelected => {
+  await elementSelected.typeText('\n');
+};
+
+const checkTextIsVisible = async text => {
+  await waitFor(element(by.text(text)))
+    .toBeVisible()
+    .withTimeout(10000);
+};
+
+const waitExecution = async (timeout = 2000) => {
+  return await new Promise(resolve => setTimeout(resolve, timeout));
+};
+
 describe('Example', () => {
   beforeAll(async () => {
     await device.launchApp({
@@ -24,26 +38,33 @@ describe('Example', () => {
   it('should enter the number and visualize another texts', async () => {
     const input = element(by.id('numeric-input'));
     await input.tap();
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitExecution();
     await input.typeText('123456');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await input.typeText('\n');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await waitFor(element(by.text('Debug')))
-      .toBeVisible()
-      .withTimeout(10000);
+    await waitExecution();
+    await closeSoftwareKeyboard(input);
+    await waitExecution();
+    await checkTextIsVisible('Debug');
   });
 
   it('should enter the password and visualize another texts', async () => {
     const input = element(by.id('password'));
     await input.tap();
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitExecution();
     await input.typeText('Example123!');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await input.typeText('\n');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await waitFor(element(by.text('Debug')))
-      .toBeVisible()
-      .withTimeout(10000);
+    await waitExecution();
+    await closeSoftwareKeyboard(input);
+    await waitExecution();
+    await checkTextIsVisible('Debug');
+  });
+
+  it('should enter multilines and close keyboard', async () => {
+    const input = element(by.id('text-area'));
+    await input.tap();
+    await waitExecution();
+    await input.typeText('A some description');
+    await waitExecution();
+    await closeSoftwareKeyboard(input);
+    await waitExecution();
+    await checkTextIsVisible('Debug');
   });
 });
