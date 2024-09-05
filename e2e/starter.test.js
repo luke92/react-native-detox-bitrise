@@ -10,6 +10,10 @@ const checkTextIsVisible = async text => {
     .withTimeout(10000);
 };
 
+const isVisibleSeeYourChanges = async () => {
+  await checkTextIsVisible('See Your Changes');
+};
+
 const waitExecution = async (timeout = 2000) => {
   return await new Promise(resolve => setTimeout(resolve, timeout));
 };
@@ -43,7 +47,7 @@ describe('Example', () => {
     await waitExecution();
     await closeSoftwareKeyboard(input);
     await waitExecution();
-    await checkTextIsVisible('Debug');
+    await isVisibleSeeYourChanges();
   });
 
   it('should enter the password and visualize another texts', async () => {
@@ -54,7 +58,7 @@ describe('Example', () => {
     await waitExecution();
     await closeSoftwareKeyboard(input);
     await waitExecution();
-    await checkTextIsVisible('Debug');
+    await isVisibleSeeYourChanges();
   });
 
   it('should enter multilines and close keyboard', async () => {
@@ -65,6 +69,6 @@ describe('Example', () => {
     await waitExecution();
     await closeSoftwareKeyboard(input);
     await waitExecution();
-    await checkTextIsVisible('Debug');
+    await isVisibleSeeYourChanges();
   });
 });
