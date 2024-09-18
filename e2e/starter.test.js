@@ -1,4 +1,5 @@
 import {device, element, by, waitFor} from 'detox';
+import {format} from 'date-fns';
 
 const closeSoftwareKeyboard = async elementSelected => {
   await elementSelected.typeText('\n');
@@ -16,6 +17,20 @@ const isVisibleSeeYourChanges = async () => {
 
 const waitExecution = async (timeout = 2000) => {
   return await new Promise(resolve => setTimeout(resolve, timeout));
+};
+
+const getText = async detoxElement => {
+  let valueElement = '';
+  const attributes = await detoxElement.getAttributes();
+  if (device.getPlatform() === 'ios') {
+    valueElement = attributes?.label;
+  } else {
+    valueElement = attributes?.text;
+  }
+  if (!valueElement || valueElement === undefined) {
+    return '';
+  }
+  return valueElement.toString();
 };
 
 describe('Example', () => {
@@ -37,6 +52,17 @@ describe('Example', () => {
 
   it('should have See Your Changes', async () => {
     await expect(element(by.text('See Your Changes'))).toBeVisible();
+  });
+
+  it('should have the same date', async () => {
+    const elementDate = element(by.id('section_1_children'));
+    await expect(elementDate).toBeVisible();
+    const text = await getText(elementDate);
+    const date = new Date();
+    const formattedDate = format(date, 'MMMM dd, yyyy, hh:mm a');
+    console.log('Jest Date', formattedDate);
+    console.log('App Date', text);
+    await expect(elementDate).toHaveText(formattedDate);
   });
 
   it('should enter the number and visualize another texts', async () => {

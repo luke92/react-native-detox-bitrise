@@ -27,16 +27,23 @@ import {
 import PasswordInput from './components/PasswordInput/PasswordInput';
 import NumericInput from './components/NumericInput/NumericInput';
 import TextAreaInput from './components/TextAreaInput/TextAreaInput';
+import {format} from 'date-fns';
 
 type SectionProps = PropsWithChildren<{
   title: string;
+  testID?: string;
 }>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
+function Section({
+  children,
+  title,
+  testID = 'appText',
+}: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
       <Text
+        testID={`${testID}_title`}
         style={[
           styles.sectionTitle,
           {
@@ -46,6 +53,7 @@ function Section({children, title}: SectionProps): React.JSX.Element {
         {title}
       </Text>
       <Text
+        testID={`${testID}_children`}
         style={[
           styles.sectionDescription,
           {
@@ -65,6 +73,9 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const date = new Date();
+  const formattedDate = format(date, 'MMMM dd, yyyy, hh:mm a');
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -82,17 +93,18 @@ function App(): React.JSX.Element {
           <NumericInput />
           <PasswordInput />
           <TextAreaInput />
-          <Section title="Step One">
+          <Section testID="section_0" title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
             screen and then come back to see your edits.
           </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
+          <Section testID="section_1" title="See Your Changes">
+            {formattedDate}
           </Section>
-          <Section title="Debug">
+          <Section testID="section_2" title="Debug">
+            <ReloadInstructions />
             <DebugInstructions />
           </Section>
-          <Section title="Learn More">
+          <Section testID="section_3" title="Learn More">
             Read the docs to discover what to do next:
           </Section>
           <LearnMoreLinks />
