@@ -3,6 +3,135 @@ format_version: '13'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 project_type: react-native
 workflows:
+  android:
+    description: |
+      Runs tests.
+
+      Next steps:
+      - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
+    steps:
+    - activate-ssh-key@4: {}
+    - git-clone@8: {}
+    - restore-npm-cache@1: {}
+    - npm@1:
+        title: Run Unit test with NPM
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    - yarn@0:
+        title: Run Unit test with YARN
+        inputs:
+        - cache_local_deps: 'yes'
+        - command: install
+    - npm@1:
+        inputs:
+        - command: test
+    - yarn@0:
+        inputs:
+        - command: test
+    - script@1:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            avdmanager list device
+            sdkmanager --list
+        - script_file_path:
+        title: Show AVD Manager Info
+    - script@1:
+        inputs:
+        - script_file_path:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+
+            # debug log
+            set -x
+
+            brew install --cask zulu@17
+        title: Set JAVA
+    - script@1:
+        inputs:
+        - script_file_path:
+        - content: |
+            #!/usr/bin/env bash
+
+            # fail if any commands fails
+            set -e
+
+            # debug log
+            set -x
+
+            # Update and install the required Android SDK components
+            sudo $ANDROID_HOME/tools/bin/sdkmanager --update
+            $ANDROID_HOME/tools/bin/sdkmanager --install "emulator"
+            $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-34;google_apis;arm64-v8a"
+
+            # Create AVD with the required settings
+            echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name "Pixel_3a_API_34_extension_level_7_arm64-v8a" --device "pixel_3a" --package "system-images;android-34;google_apis;arm64-v8a" --tag "google_apis" --abi "arm64-v8a"
+
+            # Launch the emulator in headless mode
+            $ANDROID_HOME/emulator/emulator-headless @Pixel_3a_API_34_extension_level_7_arm64-v8a -no-boot-anim -netdelay none -no-snapshot -wipe-data -verbose -show-kernel -no-audio -gpu swiftshader_indirect &> /tmp/log.txt &
+
+            # Sleep to allow the emulator to start
+            sleep 160
+        title: Start Android Emulator
+    - script@1:
+        title: Install Detox CLI
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            npm install -g detox-cli
+    - script@1:
+        inputs:
+        - script_file_path:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            detox build -c android.emu.debug
+        title: Detox Build Android
+    - script@1:
+        inputs:
+        - script_file_path:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            detox test --configuration android.emu.debug --record-videos all --take-screenshots all --record-logs all
+        title: Detox E2E Android Test
+    - script@1:
+        is_always_run: true
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+
+            cp -R artifacts $BITRISE_DEPLOY_DIR
+        title: Publish Test Artifacts
+    - deploy-to-bitrise-io@2:
+        inputs:
+        - is_compress: 'true'
+        - deploy_path: "/Users/vagrant/deploy/artifacts"
   primary:
     description: |
       Runs tests.
@@ -14,30 +143,21 @@ workflows:
     - git-clone@8: {}
     - restore-npm-cache@1: {}
     - npm@1:
+        title: Run Unit test with NPM
         inputs:
         - workdir: "$WORKDIR"
         - command: install
     - yarn@0:
+        title: Run Unit test with YARN
         inputs:
         - cache_local_deps: 'yes'
         - command: install
-    - script@1:
-        title: Get Public IP Address
+    - npm@1:
         inputs:
-        - content: |
-            #!/bin/bash
-
-            # Obtener la IP pública de la máquina de Bitrise
-            PUBLIC_IP=$(curl -s http://whatismyip.akamai.com/)
-
-            # Imprimir la IP pública
-            echo "La IP pública de esta máquina de Bitrise es: $PUBLIC_IP"
-
-            # Obtener el nombre de host de la máquina
-            HOSTNAME=$(hostname)
-
-            # Imprimir el nombre de host
-            echo "El nombre de host de esta máquina de Bitrise es: $HOSTNAME"
+        - command: test
+    - yarn@0:
+        inputs:
+        - command: test
     - script@1:
         title: Install Detox Pre-Requisites
         inputs:
