@@ -53,7 +53,7 @@ module.exports = {
     bitrise: {
       type: 'android.emulator',
       device: {
-        avdName: 'pixel_3a'
+        avdName: 'emulator'
       }
     }
   },
