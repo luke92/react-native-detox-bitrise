@@ -49,6 +49,12 @@ module.exports = {
       device: {
         avdName: 'Pixel_3a_API_34_extension_level_7_arm64-v8a'
       }
+    },
+    bitrise: {
+      type: 'android.emulator',
+      device: {
+        avdName: 'pixel_3a'
+      }
     }
   },
   configurations: {
@@ -75,6 +81,10 @@ module.exports = {
     'android.emu.release': {
       device: 'emulator',
       app: 'android.release'
+    },
+    'android.emu.bitrise': {
+      device: 'bitrise',
+      app: 'android.debug'
     }
   }
 };
