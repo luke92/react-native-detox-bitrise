@@ -10,7 +10,6 @@ workflows:
       Next steps:
       - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
     steps:
-    - activate-ssh-key@4: {}
     - git-clone@8: {}
     - restore-npm-cache@1: {}
     - npm@1:
@@ -42,7 +41,14 @@ workflows:
             sdkmanager --list
         - script_file_path:
         title: Show AVD Manager Info
+    - avd-manager@1:
+        inputs:
+        - profile: pixel_3a
+        - api_level: 34
+        - abi: x86_64
+    - wait-for-android-emulator@1: {}
     - script@1:
+        title: Show Emulators
         inputs:
         - script_file_path:
         - content: |-
@@ -53,34 +59,7 @@ workflows:
             # debug log
             set -x
 
-            brew install --cask zulu@17
-        title: Set JAVA
-    - script@1:
-        inputs:
-        - script_file_path:
-        - content: |
-            #!/usr/bin/env bash
-
-            # fail if any commands fails
-            set -e
-
-            # debug log
-            set -x
-
-            # Update and install the required Android SDK components
-            sudo $ANDROID_HOME/tools/bin/sdkmanager --update
-            $ANDROID_HOME/tools/bin/sdkmanager --install "emulator"
-            $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-34;google_apis;arm64-v8a"
-
-            # Create AVD with the required settings
-            echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name "Pixel_3a_API_34_extension_level_7_arm64-v8a" --device "pixel_3a" --package "system-images;android-34;google_apis;arm64-v8a" --tag "google_apis" --abi "arm64-v8a"
-
-            # Launch the emulator in headless mode
-            $ANDROID_HOME/emulator/emulator-headless @Pixel_3a_API_34_extension_level_7_arm64-v8a -no-boot-anim -netdelay none -no-snapshot -wipe-data -verbose -show-kernel -no-audio -gpu swiftshader_indirect &> /tmp/log.txt &
-
-            # Sleep to allow the emulator to start
-            sleep 160
-        title: Start Android Emulator
+            emulator -list-avds
     - script@1:
         title: Install Detox CLI
         inputs:
@@ -102,8 +81,21 @@ workflows:
             # debug log
             set -x
 
-            detox build -c android.emu.debug
+            detox build -c android.bitrise.release
         title: Detox Build Android
+    - script@1:
+        title: ADB Reverse Port
+        inputs:
+        - script_file_path:
+        - content: |-
+            #!/usr/bin/env bash
+            # fail if any commands fails
+            set -e
+
+            # debug log
+            set -x
+
+            adb reverse tcp:8081 tcp:8081
     - script@1:
         inputs:
         - script_file_path:
@@ -114,7 +106,7 @@ workflows:
             # debug log
             set -x
 
-            detox test --configuration android.emu.debug --record-videos all --take-screenshots all --record-logs all
+            detox test --configuration android.bitrise.release --record-videos all --take-screenshots all --record-logs all
         title: Detox E2E Android Test
     - script@1:
         is_always_run: true
@@ -131,15 +123,54 @@ workflows:
     - deploy-to-bitrise-io@2:
         inputs:
         - is_compress: 'true'
-        - deploy_path: "/Users/vagrant/deploy/artifacts"
-  primary:
+        - deploy_path: "/bitrise/deploy/artifacts"
+    meta:
+      bitrise.io:
+        stack: linux-docker-android-22.04
+        machine_type_id: standard
+  deploy:
+    description: |
+      Tests, builds and deploys the app using *Deploy to bitrise.io* Step.
+
+      Next steps:
+      - Set up an [Apple service with API key](https://devcenter.bitrise.io/en/accounts/connecting-to-services/connecting-to-an-apple-service-with-api-key.html).
+      - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
+    steps:
+    - git-clone@8: {}
+    - npm@1:
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    - npm@1:
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: test
+    - install-missing-android-tools@3:
+        inputs:
+        - gradlew_path: "$PROJECT_LOCATION/gradlew"
+    - android-build@1:
+        inputs:
+        - project_location: "$PROJECT_LOCATION"
+        - module: "$MODULE"
+        - variant: "$VARIANT"
+    - cocoapods-install@2:
+        inputs:
+        - is_cache_disabled: 'true'
+    - xcode-archive@5:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+        - scheme: "$BITRISE_SCHEME"
+        - distribution_method: "$BITRISE_DISTRIBUTION_METHOD"
+        - configuration: Release
+        - automatic_code_signing: api-key
+    - deploy-to-bitrise-io@2: {}
+  ios:
     description: |
       Runs tests.
 
       Next steps:
       - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
     steps:
-    - activate-ssh-key@4: {}
     - git-clone@8: {}
     - restore-npm-cache@1: {}
     - npm@1:
@@ -231,6 +262,38 @@ workflows:
         inputs:
         - is_compress: 'true'
         - deploy_path: "/Users/vagrant/deploy/artifacts"
+  primary:
+    description: |
+      Runs tests.
+
+      Next steps:
+      - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
+    steps:
+    - git-clone@8: {}
+    - restore-npm-cache@1: {}
+    - npm@1:
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    - npm@1:
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: test
+    - save-npm-cache@1: {}
+    - script@1:
+        inputs:
+        - script_file_path:
+        - content: |-
+            #!/usr/bin/env bash# fail if any commands fails
+            set -e# debug log
+            set -x# write your script here
+            sudo $ANDROID_HOME/tools/bin/sdkmanager --update
+            $ANDROID_HOME/tools/bin/sdkmanager --install "emulator"
+            $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-29;google_apis;x86"
+            echo "no" | $ANDROID_HOME/tools/bin/avdmanager --verbose create avd --force --name "pixel" --device "pixel" --package "system-images;android-29;google_apis;x86" --tag "google_apis" --abi "x86"
+            $ANDROID_HOME/emulator/emulator-headless @pixel -no-boot-anim -netdelay none -no-snapshot -wipe-data -verbose -show-kernel -no-audio -gpu swiftshader_indirect -no-snapshot &> /tmp/log.txt &
+            sleep 160
+    - deploy-to-bitrise-io@2: {}
 meta:
   bitrise.io:
     stack: osx-xcode-15.4.x
@@ -257,7 +320,7 @@ app:
     BITRISE_SCHEME: BitriseReactNative
   - opts:
       is_expand: false
-    BITRISE_DISTRIBUTION_METHOD: development
+    BITRISE_DISTRIBUTION_METHOD: ad-hoc
 trigger_map:
 - push_branch: main
   workflow: primary
